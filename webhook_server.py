@@ -4,7 +4,7 @@ import hmac
 import hashlib
 
 app = Flask(__name__)
-GITHUB_SECRET = b"ChatbotWebhook#5005"  # Replace this after GitHub setup
+GITHUB_SECRET = b"ChatbotWebhook#5005"
 
 def verify_signature(payload, signature):
     mac = hmac.new(GITHUB_SECRET, msg=payload, digestmod=hashlib.sha256)
