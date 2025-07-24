@@ -1,0 +1,51 @@
+from dotenv import load_dotenv
+load_dotenv()
+
+from pydantic_settings import BaseSettings
+from typing import Optional
+import os
+
+class Settings(BaseSettings):
+    # Project identification
+    PROJECT_NAME: str = os.getenv("PROJECT_NAME", "chatbot-api")
+    PROJECT_ID: str = os.getenv("PROJECT_ID", "local-test")
+    ENVIRONMENT: str = os.getenv("ENVIRONMENT", "development")
+    
+    # Redis settings
+    REDIS_HOST: str = os.getenv("REDIS_HOST", "localhost")
+    REDIS_PORT: int = int(os.getenv("REDIS_PORT", "6379"))
+    REDIS_DB: int = int(os.getenv("REDIS_DB", "0"))
+    REDIS_PREFIX: str = f"{PROJECT_ID}:"
+    REDIS_PASSWORD: Optional[str] = os.getenv("REDIS_PASSWORD")
+    
+    # Elasticsearch settings
+    ELASTICSEARCH_HOST: str = os.getenv("ELASTICSEARCH_HOST", "localhost")
+    ELASTICSEARCH_PORT: int = int(os.getenv("ELASTICSEARCH_PORT", "443"))
+    ELASTICSEARCH_INDEX_PREFIX: str = f"{PROJECT_ID}-"
+    ELASTICSEARCH_API_KEY: Optional[str] = os.getenv("ELASTICSEARCH_API_KEY")
+    
+    # AWS settings
+    AWS_ACCESS_KEY_ID: Optional[str] = os.getenv("AWS_ACCESS_KEY_ID")
+    AWS_SECRET_ACCESS_KEY: Optional[str] = os.getenv("AWS_SECRET_ACCESS_KEY")
+    AWS_DEFAULT_REGION: Optional[str] = os.getenv("AWS_DEFAULT_REGION", "us-east-1")
+    AWS_BEDROCK_MODEL_ID: Optional[str] = os.getenv("AWS_BEDROCK_MODEL_ID")
+    
+    # S3 settings
+    S3_BUCKET_NAME: str = os.getenv("S3_BUCKET_NAME", "chatbot-products-data")
+    S3_PRODUCTS_KEY: str = os.getenv("S3_PRODUCTS_KEY", "products.json")
+    
+    # LLM settings
+    LLM_MODEL: str = os.getenv("LLM_MODEL", "gpt-3.5-turbo")
+    OPENAI_API_KEY: Optional[str] = os.getenv("OPENAI_API_KEY")
+    GOOGLE_API_KEY: Optional[str] = os.getenv("GOOGLE_API_KEY")
+    GEMINI_MODEL: Optional[str] = os.getenv("GEMINI_MODEL")
+    
+    # Vector DB settings
+    PINECONE_API_KEY: Optional[str] = os.getenv("PINECONE_API_KEY")
+    PINECONE_ENVIRONMENT: Optional[str] = os.getenv("PINECONE_ENVIRONMENT")
+    
+    class Config:
+        env_file = ".env"
+
+# Create global settings instance
+settings = Settings()
