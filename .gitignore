@@ -1,6 +1,9 @@
 # Environment variables
 .env
 
+# Personal files with actual credentials/IPs (keep local only)
+PERSONAL_OPERATIONS_GUIDE.md
+
 # Python cache files
 __pycache__/
 *.py[cod]
