@@ -1,7 +1,7 @@
 """
 Service Connections Management
 
-This module handles connections to external services (Redis, Elasticsearch, Pinecone).
+This module handles connections to external services (Redis, Pinecone).
 
 Current Implementation (Demo):
 - Static service connections suitable for demo load
@@ -17,10 +17,9 @@ Production Considerations:
 
 from typing import Optional
 import redis
-from elasticsearch import Elasticsearch
 from config import settings
 import os
-from support_docs.pinecone_client import PineconeSupport
+from vector_service.pinecone_client import PineconeClient, pinecone_products_client, pinecone_support_client
 
 class ServiceConnections:
     """
@@ -35,8 +34,8 @@ class ServiceConnections:
     """
     
     _redis_client: Optional[redis.Redis] = None
-    _es_client: Optional[Elasticsearch] = None
-    _pinecone_client: Optional[PineconeSupport] = None
+    _pinecone_support_client: Optional[PineconeClient] = None
+    _pinecone_products_client: Optional[PineconeClient] = None
     
     @classmethod
     def get_redis(cls) -> redis.Redis:
@@ -62,44 +61,33 @@ class ServiceConnections:
                 password = os.getenv("REDIS_PASSWORD", "")
                 encoded_pw = quote(password)
                 redis_url = f"redis://{username}:{encoded_pw}@{host}:{port}/{db}"
-            cls._redis_client = redis.from_url(redis_url, decode_responses=True)
+            cls._redis_client = redis.from_url(
+                redis_url, 
+                decode_responses=True,
+                socket_timeout=5,
+                socket_connect_timeout=5
+            )
         return cls._redis_client
     
     @classmethod
-    def get_elasticsearch(cls) -> Elasticsearch:
+    def get_pinecone_products(cls) -> PineconeClient:
         """
-        Get Elasticsearch connection.
+        Get Pinecone connection for product search.
         
-        Note: Current implementation uses single connection.
+        Note: Current implementation uses basic connection.
         Production would:
-        - Use connection pool
-        - Add automatic reconnection
-        - Monitor cluster health
-        - Add load balancing
+        - Add connection monitoring
+        - Implement retry logic
+        - Add error recovery
         """
-        if not cls._es_client:
-            es_host = os.getenv("ELASTICSEARCH_HOST")
-            es_port = os.getenv("ELASTICSEARCH_PORT")
-            es_api_key = os.getenv("ELASTICSEARCH_API_KEY")
-            
-            if not es_host:
-                raise Exception("ELASTICSEARCH_HOST is required for Elastic Cloud connection")
-            if not es_port:
-                raise Exception("ELASTICSEARCH_PORT is required for Elastic Cloud connection")
-            if not es_api_key:
-                raise Exception("ELASTICSEARCH_API_KEY is required for Elastic Cloud connection")
-                
-            es_url = f"https://{es_host}:{es_port}"
-            
-            cls._es_client = Elasticsearch(
-                es_url,
-                api_key=es_api_key,
-                verify_certs=True
-            )
-        return cls._es_client
+        if not cls._pinecone_products_client:
+            cls._pinecone_products_client = pinecone_products_client
+            if not cls._pinecone_products_client.is_available():
+                raise Exception("PINECONE_API_KEY is required for Product Search")
+        return cls._pinecone_products_client
 
     @classmethod
-    def get_pinecone(cls) -> PineconeSupport:
+    def get_pinecone_support(cls) -> PineconeClient:
         """
         Get Pinecone connection for support RAG.
         
@@ -109,11 +97,11 @@ class ServiceConnections:
         - Implement retry logic
         - Add error recovery
         """
-        if not cls._pinecone_client:
-            cls._pinecone_client = PineconeSupport()
-            if not cls._pinecone_client.is_available():
+        if not cls._pinecone_support_client:
+            cls._pinecone_support_client = pinecone_support_client
+            if not cls._pinecone_support_client.is_available():
                 raise Exception("PINECONE_API_KEY is required for Support RAG")
-        return cls._pinecone_client
+        return cls._pinecone_support_client
     
     @classmethod
     def initialize_all(cls):
@@ -135,19 +123,20 @@ class ServiceConnections:
         except Exception as e:
             print(f"⚠️ Redis connection failed: {e}")
         
-        # Test Elasticsearch connection (required)
+        # Test Pinecone Products connection (required)
         try:
-            es = cls.get_elasticsearch()
-            es.ping()
-            print("✅ Elasticsearch connected successfully")
+            pinecone_products = cls.get_pinecone_products()
+            if not pinecone_products.is_available():
+                raise Exception("Pinecone Products connection failed")
+            print("✅ Pinecone Products Search connected successfully")
         except Exception as e:
-            raise Exception(f"Elasticsearch connection required but failed: {e}")
+            raise Exception(f"Pinecone Products connection required but failed: {e}")
 
-        # Test Pinecone connection (required)
+        # Test Pinecone Support connection (required)
         try:
-            pinecone = cls.get_pinecone()
-            if not pinecone.is_available():
-                raise Exception("Pinecone connection failed")
+            pinecone_support = cls.get_pinecone_support()
+            if not pinecone_support.is_available():
+                raise Exception("Pinecone Support connection failed")
             print("✅ Pinecone Support RAG connected successfully")
         except Exception as e:
             raise Exception(f"Pinecone Support RAG connection required but failed: {e}")
@@ -166,8 +155,6 @@ class ServiceConnections:
         """
         if cls._redis_client:
             cls._redis_client.close()
-        if cls._es_client:
-            cls._es_client.close()
         # Pinecone doesn't need explicit cleanup
 
 # Global service connections instance

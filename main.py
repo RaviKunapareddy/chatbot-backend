@@ -17,14 +17,24 @@ Production Considerations:
 - Implement rate limiting and security measures
 """
 
-from fastapi import FastAPI, HTTPException
+from fastapi import FastAPI, HTTPException, Request
 from fastapi.middleware.cors import CORSMiddleware
 import uvicorn
+import logging
+import os
+from datetime import datetime, timedelta
 from typing import Dict, Any
+from contextlib import asynccontextmanager
+from slowapi import Limiter, _rate_limit_exceeded_handler
+from slowapi.util import get_remote_address
+from slowapi.errors import RateLimitExceeded
 from router.chat import router as chat_router
 from search.product_data_loader import product_data_loader
 from config import settings
 from services import services
+
+# Rate limiting setup
+limiter = Limiter(key_func=get_remote_address)
 
 def transform_product_for_frontend(product: Dict[str, Any]) -> Dict[str, Any]:
     """
@@ -50,37 +60,45 @@ def transform_product_for_frontend(product: Dict[str, Any]) -> Dict[str, Any]:
         "category": product.get('category', '')
     }
 
-app = FastAPI(
-    title=f"{settings.PROJECT_NAME}", 
-    version="1.0.0",
-    description="Production-grade AI chatbot with Redis, Elasticsearch hybrid search, and multi-LLM support"
-)
-
-@app.get("/health")
-async def health_check():
-    """
-    Health check endpoint for container orchestration.
+def setup_logging():
+    """Setup daily log files with automatic cleanup"""
+    # Create logs directory
+    os.makedirs('logs', exist_ok=True)
     
-    Note: Current implementation checks basic service status.
-    Production would add:
-    - Deep health checks for all services
-    - Memory usage metrics
-    - Response time monitoring
-    """
-    return {
-        "status": "healthy",
-        "project": settings.PROJECT_NAME,
-        "project_id": settings.PROJECT_ID,
-        "environment": settings.ENVIRONMENT
-    }
-
-@app.on_event("startup")
-async def startup_event():
-    """
-    Initialize services and load data.
+    # Clean up old log files (older than 7 days)
+    cutoff_date = datetime.now() - timedelta(days=7)
+    for filename in os.listdir('logs'):
+        if filename.startswith('app_') and filename.endswith('.log'):
+            file_path = os.path.join('logs', filename)
+            file_time = datetime.fromtimestamp(os.path.getctime(file_path))
+            if file_time < cutoff_date:
+                os.remove(file_path)
     
-    Cloud-only configuration with comprehensive validation.
+    # Setup daily log file
+    today = datetime.now().strftime('%Y-%m-%d')
+    log_filename = f'logs/app_{today}.log'
+    
+    # Configure logging
+    logging.basicConfig(
+        level=logging.INFO,
+        format='%(asctime)s - %(name)s - %(levelname)s - %(message)s',
+        handlers=[
+            logging.FileHandler(log_filename),
+            logging.StreamHandler()  # Keep console output too
+        ]
+    )
+
+@asynccontextmanager
+async def lifespan(app: FastAPI):
     """
+    Lifespan context manager for FastAPI app startup and shutdown.
+    
+    Replaces deprecated @app.on_event handlers with modern lifespan pattern.
+    """
+    # Startup
+    # Setup logging first
+    setup_logging()
+    
     print(f"🚀 Initializing {settings.PROJECT_NAME} (ID: {settings.PROJECT_ID})...")
     
     # Validate required cloud credentials
@@ -91,10 +109,92 @@ async def startup_event():
     services.initialize_all()
     
     # Load product data
-    print("📦 Loading product data and initializing vector store...")
+    print("📦 Loading product data and initializing Pinecone vector database...")
     product_data_loader.load_products()
     
     print("✅ Backend fully initialized")
+    
+    yield
+    
+    # Shutdown
+    services.close_all()
+
+app = FastAPI(
+    title=f"{settings.PROJECT_NAME}", 
+    version="1.0.0",
+    description="Production-grade AI chatbot with Redis, Pinecone vector search, and multi-LLM support",
+    lifespan=lifespan
+)
+
+# Configure rate limiter
+app.state.limiter = limiter
+app.add_exception_handler(RateLimitExceeded, _rate_limit_exceeded_handler)
+
+@app.get("/health")
+async def health_check():
+    """
+    Health check endpoint for container orchestration.
+    Tests actual service connectivity for production monitoring.
+    """
+    service_status = {}
+    overall_healthy = True
+    
+    # Test Redis connectivity
+    try:
+        redis_client = services.get_redis()
+        redis_client.ping()
+        service_status["redis"] = "connected"
+    except Exception as e:
+        service_status["redis"] = "failed"
+        overall_healthy = False
+    
+    # Test Pinecone connectivity
+    try:
+        from vector_service.pinecone_client import pinecone_products_client
+        if pinecone_products_client.is_available():
+            service_status["pinecone"] = "connected"
+        else:
+            service_status["pinecone"] = "unavailable"
+            overall_healthy = False
+    except Exception as e:
+        service_status["pinecone"] = "failed"
+        overall_healthy = False
+    
+    # Add basic usage monitoring for free tier awareness
+    usage_info = {}
+    try:
+        redis_client = services.get_redis()
+        
+        # Get daily request count (for rate limiting awareness)
+        today = datetime.now().strftime("%Y-%m-%d")
+        daily_requests = redis_client.get(f"daily_requests:{today}") or "0"
+        
+        # Get monthly embedding count (for HuggingFace API awareness)
+        this_month = datetime.now().strftime("%Y-%m")
+        monthly_embeddings = redis_client.get(f"monthly_embeddings:{this_month}") or "0"
+        
+        usage_info = {
+            "daily_requests": int(daily_requests),
+            "monthly_embeddings": int(monthly_embeddings),
+            "free_tier_limits": {
+                "daily_requests_limit": 14400,  # 10/min * 60 * 24
+                "monthly_embeddings_limit": 1000,  # HuggingFace free tier
+                "note": "Monitor these to stay within free tier limits"
+            }
+        }
+    except Exception as e:
+        usage_info = {"error": "Could not retrieve usage stats", "details": str(e)}
+    
+    return {
+        "status": "healthy" if overall_healthy else "degraded",
+        "project": settings.PROJECT_NAME,
+        "project_id": settings.PROJECT_ID,
+        "environment": settings.ENVIRONMENT,
+        "services": service_status,
+        "usage_monitoring": usage_info
+    }
+
+
 
 def validate_cloud_credentials():
     """Validate that all required cloud service credentials are present"""
@@ -102,7 +202,6 @@ def validate_cloud_credentials():
     
     required_credentials = {
         "AWS S3": ["AWS_ACCESS_KEY_ID", "AWS_SECRET_ACCESS_KEY", "S3_BUCKET_NAME"],
-        "Elasticsearch Cloud": ["ELASTICSEARCH_HOST", "ELASTICSEARCH_PORT", "ELASTICSEARCH_API_KEY"],
         "Redis Cloud": ["REDIS_HOST"],  # REDIS_URL is alternative
         "HuggingFace Cloud": ["HF_API_KEY"],
         "Pinecone Cloud": ["PINECONE_API_KEY"]
@@ -126,18 +225,7 @@ def validate_cloud_credentials():
     
     print("✅ All cloud credentials validated")
 
-@app.on_event("shutdown")
-async def shutdown_event():
-    """
-    Cleanup service connections.
-    
-    Note: Current implementation handles basic cleanup.
-    Production would:
-    - Ensure graceful shutdown
-    - Wait for ongoing requests
-    - Cleanup cache entries
-    """
-    services.close_all()
+
 
 # CORS middleware for frontend communication
 app.add_middleware(
@@ -199,7 +287,7 @@ async def search_products(q: str, limit: int = 10):
     """
     Search products for frontend.
     
-    Note: Current implementation uses Elasticsearch for demo.
+    Note: Current implementation uses Pinecone vector search for product data.
     Production would add:
     - Query validation and sanitization
     - Search result caching

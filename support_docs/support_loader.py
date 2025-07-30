@@ -1,11 +1,11 @@
 from typing import Dict, Any, List
-from .pinecone_client import PineconeSupport
+from vector_service.pinecone_client import pinecone_support_client
 from .FAQ_Knowledge_base import ProductPolicyScraper
 from .FAQ_Knowledge_base import KnowledgeProvider
 
 class SupportLoader:
     def __init__(self, llm_service=None):
-        self.pinecone_support = PineconeSupport()
+        self.pinecone_support = pinecone_support_client
         self.policy_extractor = ProductPolicyScraper()
         self.knowledge_provider = KnowledgeProvider()
         self.llm_service = llm_service

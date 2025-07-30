@@ -16,6 +16,7 @@ import os
 from datetime import datetime
 from config import settings
 from botocore.exceptions import ClientError
+from botocore.config import Config
 import logging
 
 logger = logging.getLogger(__name__)
@@ -36,35 +37,56 @@ class ProductS3Client:
             return self.cached_products
             
         try:
-            response = self.s3_client.get_object(
-                Bucket=self.bucket_name,
-                Key=self.products_key
-            )
-            products_data = json.loads(response['Body'].read().decode('utf-8'))
-            
-            # Handle both array and object with products key
-            if isinstance(products_data, dict) and 'products' in products_data:
-                self.cached_products = products_data['products']
-            elif isinstance(products_data, list):
-                self.cached_products = products_data
-            else:
-                raise ValueError("Invalid products data format")
+            # Try to load from S3
+            try:
+                response = self.s3_client.get_object(
+                    Bucket=self.bucket_name,
+                    Key=self.products_key
+                )
+                products_data = json.loads(response['Body'].read().decode('utf-8'))
                 
-            logger.info(f"✅ Loaded {len(self.cached_products)} products from S3")
+                # Handle both array and object with products key
+                if isinstance(products_data, dict) and 'products' in products_data:
+                    self.cached_products = products_data['products']
+                elif isinstance(products_data, list):
+                    self.cached_products = products_data
+                else:
+                    self.cached_products = []
+                    
+                logger.info(f"✅ Loaded {len(self.cached_products)} products from S3")
+                
+            except ClientError as e:
+                logger.warning(f"❌ S3 error: {e}")
+                # Fall back to local file if S3 fails
+                local_path = os.path.join(os.path.dirname(os.path.dirname(__file__)), 'data', 'products.json')
+                
+                if os.path.exists(local_path):
+                    # Load products from local file if it exists
+                    try:
+                        with open(local_path, 'r') as f:
+                            products_data = json.load(f)
+                            
+                            # Handle both array and object with products key
+                            if isinstance(products_data, dict) and 'products' in products_data:
+                                self.cached_products = products_data['products']
+                            elif isinstance(products_data, list):
+                                self.cached_products = products_data
+                            else:
+                                self.cached_products = []
+                                
+                            logger.info(f"✅ Loaded {len(self.cached_products)} products from local file")
+                    except Exception as local_error:
+                        logger.error(f"❌ Error loading local products file: {local_error}")
+                        self.cached_products = []
+                else:
+                    logger.warning(f"Local products file not found at {local_path}")
+                    self.cached_products = []
+                
             return self.cached_products
-            
-        except ClientError as e:
-            error_code = e.response['Error']['Code']
-            if error_code == 'NoSuchKey':
-                logger.error(f"❌ Products file not found in S3: {self.products_key}")
-            elif error_code == 'NoSuchBucket':
-                logger.error(f"❌ S3 bucket not found: {self.bucket_name}")
-            else:
-                logger.error(f"❌ S3 error: {e}")
-            raise
+                
         except Exception as e:
-            logger.error(f"❌ Failed to load products: {e}")
-            raise
+            logger.error(f"❌ Error loading products: {e}")
+            return []
     
     def upload_products(self, file_path: str, create_backup: bool = True) -> bool:
         """Upload products from local JSON file to S3"""
@@ -462,7 +484,11 @@ class UnifiedS3Client:
                 's3',
                 aws_access_key_id=settings.AWS_ACCESS_KEY_ID,
                 aws_secret_access_key=settings.AWS_SECRET_ACCESS_KEY,
-                region_name=settings.AWS_DEFAULT_REGION
+                region_name=settings.AWS_DEFAULT_REGION,
+                config=Config(
+                    read_timeout=10,
+                    connect_timeout=5
+                )
             )
             logger.info("✅ Unified S3 client initialized successfully")
         except Exception as e:

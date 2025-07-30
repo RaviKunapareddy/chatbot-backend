@@ -1,5 +1,5 @@
-# Search module for Elasticsearch hybrid search 
-from .elasticsearch_client import ElasticsearchClient
+# Search module for Pinecone vector search
+from vector_service.pinecone_client import pinecone_products_client
 
-# Initialize global Elasticsearch client
-elasticsearch_client = ElasticsearchClient() 
+# Export the product data loader
+from .product_data_loader import product_data_loader

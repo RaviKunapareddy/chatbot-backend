@@ -1,5 +1,6 @@
 import os
 import json
+import logging
 from typing import Dict, Any
 import boto3
 from botocore.exceptions import ClientError, NoCredentialsError
@@ -7,6 +8,7 @@ import google.generativeai as genai
 from dotenv import load_dotenv
 
 load_dotenv()
+logger = logging.getLogger(__name__)
 
 class IntentClassifier:
     def __init__(self):
@@ -20,13 +22,12 @@ class IntentClassifier:
         self._init_gemini()
         
         # Status summary - use logging instead of print
-        import logging
         if self.aws_available:
-            logging.info("AWS Bedrock ready (Primary)")
+            logger.info("AWS Bedrock ready (Primary)")
         elif self.gemini_available:
-            logging.info("Google Gemini ready (Fallback)")
+            logger.info("Google Gemini ready (Fallback)")
         else:
-            logging.warning("Using keyword-based classification (Final fallback)")
+            logger.warning("Using keyword-based classification (Final fallback)")
     
     def _init_aws_bedrock(self):
         """Initialize AWS Bedrock client"""
@@ -49,8 +50,7 @@ class IntentClassifier:
                 self.aws_available = True
                 
             except Exception as e:
-                import logging
-                logging.error(f"AWS Bedrock initialization failed: {e}")
+                logger.error(f"AWS Bedrock initialization failed: {e}")
                 self.aws_available = False
     
     def _init_gemini(self):
@@ -65,8 +65,7 @@ class IntentClassifier:
                 self.gemini_available = True
                 
             except Exception as e:
-                import logging
-                logging.error(f"Google Gemini initialization failed: {e}")
+                logger.error(f"Google Gemini initialization failed: {e}")
                 self.gemini_available = False
     
     async def classify_intent(self, user_message: str) -> Dict[str, Any]:
@@ -89,8 +88,7 @@ class IntentClassifier:
                 return result
         
         # Final fallback to keyword-based
-        import logging
-        logging.info("Using keyword-based classification (final fallback)")
+        logger.info("Using keyword-based classification (final fallback)")
         result = self._fallback_classification(user_message)
         # Add price extraction
         result = self._enhance_with_price_extraction(user_message, result)
@@ -216,13 +214,11 @@ Respond with ONLY valid JSON:
             
             intent_data = json.loads(result_text)
             
-            import logging
-            logging.info(f"Bedrock classified: {intent_data['intent']} (confidence: {intent_data['confidence']})")
+            logger.info(f"Bedrock classified: {intent_data['intent']} (confidence: {intent_data['confidence']})")
             return intent_data
             
         except Exception as e:
-            import logging
-            logging.error(f"Bedrock classification error: {e}")
+            logger.error(f"Bedrock classification error: {e}")
             return None
     
     async def _classify_with_gemini(self, user_message: str) -> Dict[str, Any]:
@@ -260,13 +256,11 @@ Respond with ONLY valid JSON:
             
             intent_data = json.loads(result_text)
             
-            import logging
-            logging.info(f"Gemini classified: {intent_data['intent']} (confidence: {intent_data['confidence']})")
+            logger.info(f"Gemini classified: {intent_data['intent']} (confidence: {intent_data['confidence']})")
             return intent_data
             
         except Exception as e:
-            import logging
-            logging.error(f"Gemini classification error: {e}")
+            logger.error(f"Gemini classification error: {e}")
             return None
     
     def _fallback_classification(self, user_message: str) -> Dict[str, Any]:

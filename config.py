@@ -20,11 +20,11 @@ class Settings(BaseSettings):
     REDIS_PREFIX: str = f"{PROJECT_ID}:"
     REDIS_PASSWORD: Optional[str] = None
     
-    # Elasticsearch settings
-    ELASTICSEARCH_HOST: str
-    ELASTICSEARCH_PORT: int = int(os.getenv("ELASTICSEARCH_PORT", "443"))
-    ELASTICSEARCH_INDEX_PREFIX: str = f"{PROJECT_ID}-"
-    ELASTICSEARCH_API_KEY: Optional[str] = None
+    # Pinecone settings
+    PINECONE_API_KEY: Optional[str] = None
+    PINECONE_ENVIRONMENT: str = os.getenv("PINECONE_ENVIRONMENT", "gcp-starter")
+    PINECONE_PRODUCTS_INDEX: str = os.getenv("PINECONE_PRODUCTS_INDEX", "chatbot-products")
+    PINECONE_SUPPORT_INDEX: str = os.getenv("PINECONE_SUPPORT_INDEX", "chatbot-support")
     
     # AWS settings
     AWS_ACCESS_KEY_ID: Optional[str] = None
@@ -42,9 +42,10 @@ class Settings(BaseSettings):
     GOOGLE_API_KEY: Optional[str] = None
     GEMINI_MODEL: Optional[str] = None
     
-    # Vector DB settings
-    PINECONE_API_KEY: Optional[str] = None
-    PINECONE_ENVIRONMENT: Optional[str] = None
+    # HuggingFace settings
+    HF_API_KEY: Optional[str] = None
+    HF_PRODUCT_MODEL: str = os.getenv("HF_PRODUCT_MODEL", "BAAI/bge-small-en-v1.5")
+    HF_SUPPORT_MODEL: str = os.getenv("HF_SUPPORT_MODEL", "BAAI/bge-small-en-v1.5")
     
     class Config:
         env_file = ".env"

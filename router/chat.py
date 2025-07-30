@@ -1,12 +1,19 @@
-from fastapi import APIRouter, HTTPException
+from fastapi import APIRouter, HTTPException, Request
 from pydantic import BaseModel
 from typing import Dict, Any, List
+import logging
+from slowapi import Limiter
+from slowapi.util import get_remote_address
 from search.product_data_loader import product_data_loader
 from router.intent_classifier import intent_classifier
 from memory.conversation_memory import conversation_memory
 from support_docs.support_loader import SupportLoader
 
+logger = logging.getLogger(__name__)
 router = APIRouter()
+
+# Rate limiter instance
+limiter = Limiter(key_func=get_remote_address)
 
 # Initialize support RAG handler (will be properly initialized on startup)
 support_loader = None
@@ -22,13 +29,23 @@ class ChatResponse(BaseModel):
     suggestions: List[str] = []
 
 @router.post("/chat", response_model=ChatResponse)
-async def process_message(chat_message: ChatMessage):
+@limiter.limit("10/minute")
+async def process_message(request: Request, chat_message: ChatMessage):
     """Main chat endpoint - processes user message and returns appropriate response"""
     
     try:
         user_message = chat_message.message
         session_id = chat_message.session_id
-    
+        
+        # Track usage for free tier monitoring
+        try:
+            from datetime import datetime
+            redis_client = services.get_redis()
+            today = datetime.now().strftime("%Y-%m-%d")
+            redis_client.incr(f"daily_requests:{today}")
+            redis_client.expire(f"daily_requests:{today}", 86400)  # Expire after 24 hours
+        except Exception:
+            pass  # Don't fail the request if usage tracking fails
         
         # Get conversation context
         context = conversation_memory.get_context(session_id)
@@ -57,8 +74,7 @@ async def process_message(chat_message: ChatMessage):
             
     except Exception as e:
         # Log error instead of printing
-        import logging
-        logging.error(f"Chat processing error: {e}")
+        logger.error(f"Chat processing error: {e}")
         raise HTTPException(status_code=500, detail="Internal server error")
 
 async def handle_search(user_message: str, intent_result: Dict[str, Any] = None, session_id: str = "default_session") -> ChatResponse:
@@ -102,19 +118,17 @@ async def handle_search(user_message: str, intent_result: Dict[str, Any] = None,
         # Fallback to corrected query
         search_terms = corrected_query
     
-    # Search products using Elasticsearch hybrid search
-    all_products = product_data_loader.semantic_search_products(search_terms, limit=20)
+    # Search products using Pinecone vector search with price filtering
+    price_min = None
+    price_max = price_mentioned if price_mentioned else None
     
-    # Apply price filters if mentioned
-    filtered_products = []
-    for product in all_products:
-        price = float(product.get('price', 0))
-        
-        # Apply price filter if user mentioned a price
-        if price_mentioned and price > price_mentioned:
-            continue
-            
-        filtered_products.append(product)
+    # Pass price filters directly to the semantic search function
+    filtered_products = product_data_loader.semantic_search_products(
+        search_terms, 
+        limit=20,
+        price_min=price_min,
+        price_max=price_max
+    )
     
     # Limit results to 3 for cleaner UI and focused recommendations
     final_products = filtered_products[:3]

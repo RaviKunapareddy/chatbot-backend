@@ -4,14 +4,18 @@ Data Loading and Management
 This module handles:
 - Product data loading from S3
 - Category extraction and management
-- Semantic search integration with vector store
+- Semantic search integration with Pinecone vector database
 - Product filtering and recommendations
 """
 
 import json
 import os
+import logging
 from typing import List, Dict, Any, Optional
 from data.s3_client import s3_client
+from vector_service.pinecone_client import pinecone_products_client
+
+logger = logging.getLogger(__name__)
 
 class ProductDataLoader:
     """Handles product data loading and search operations"""
@@ -38,21 +42,19 @@ class ProductDataLoader:
             # Extract categories
             self.categories = {product.get('category', 'Unknown') for product in self.products}
             
-            # Optionally store in Elasticsearch for semantic search (if available)
+            # Optionally store in Pinecone for semantic search (if available)
             try:
-                from search.elasticsearch_client import elasticsearch_client
-                if elasticsearch_client.available:
-                    elasticsearch_client.create_index()
-                    elasticsearch_client.index_products(self.products)
-                    print(f"✅ Products indexed in Elasticsearch for hybrid search")
+                if pinecone_products_client.is_available():
+                    pinecone_products_client.index_products(self.products)
+                    logger.info("Products indexed in Pinecone for vector search")
             except Exception as e:
-                print(f"⚠️ Elasticsearch indexing failed (will use keyword search): {e}")
+                logger.warning(f"Pinecone indexing failed (will use keyword search): {e}")
             
-            print(f"✅ Loaded {len(self.products)} products")
+            logger.info(f"Loaded {len(self.products)} products")
             return self.products
             
         except Exception as e:
-            print(f"❌ Error loading products: {e}")
+            logger.error(f"Error loading products: {e}")
             return []
     
     def get_products(self) -> List[Dict[str, Any]]:
@@ -92,23 +94,22 @@ class ProductDataLoader:
         
         return results
     
-    def semantic_search_products(self, query: str, limit: int = 5) -> List[Dict[str, Any]]:
-        """Advanced semantic search using Elasticsearch or fallback to keyword search"""
+    def semantic_search_products(self, query: str, limit: int = 5, price_min: float = None, price_max: float = None) -> List[Dict[str, Any]]:
+        """Advanced semantic search using Pinecone or fallback to keyword search"""
         if not self.products:
             self.load_products()
         
-        # Try Elasticsearch hybrid search first (if available)
+        # Try Pinecone vector search first (if available)
         try:
-            from search.elasticsearch_client import elasticsearch_client
-            if elasticsearch_client.available:
-                results = elasticsearch_client.hybrid_search(query, limit=limit)
+            if pinecone_products_client.is_available():
+                results = pinecone_products_client.search_products(query, limit=limit, price_min=price_min, price_max=price_max)
                 if results:
                     return results
         except Exception as e:
-            print(f"⚠️ Elasticsearch search failed, falling back to keyword search: {e}")
+            logger.warning(f"Pinecone search failed, falling back to keyword search: {e}")
         
         # Fallback to basic keyword search
-        print(f"🔄 Using keyword search fallback for: '{query}'")
+        logger.info(f"Using keyword search fallback for: '{query}'")
         results = self.search_products(query, limit=limit)
         
         # Ensure we have similarity scores for ranking consistency
