@@ -25,13 +25,13 @@ This guide covers all deployment operations for the FastAPI chatbot backend on A
 ```bash
 # From your local machine
 cd /path/to/chatbot_backend_backup/deployment
-./manual_deploy.sh your-key.pem YOUR_EC2_IP
+./manual_deploy.sh ~/.ssh/chatbot-demo-key.pem 18.234.53.50
 ```
 
 ### Step 2: Initial Server Setup
 ```bash
 # SSH to your server
-ssh -i your-key.pem ubuntu@YOUR_EC2_IP
+ssh -i ~/.ssh/chatbot-demo-key.pem ubuntu@18.234.53.50
 
 # Run one-time setup
 cd /opt/chatbot/deployment
@@ -64,7 +64,7 @@ cd /opt/chatbot/deployment
 ./service_manager.sh status
 
 # Test API
-curl http://YOUR_EC2_IP/health
+curl http://18.234.53.50/health
 ```
 
 ---
@@ -121,7 +121,7 @@ sudo journalctl -u chatbot-webhook -f
 ### Setup
 1. **GitHub Repository Settings:**
    - Go to Settings → Webhooks
-   - Add webhook: `http://YOUR_EC2_IP:5005/webhook`
+   - Add webhook: `http://18.234.53.50:5005/webhook`
    - Content type: `application/json`
    - Secret: Same as `GITHUB_WEBHOOK_SECRET` in `.env`
    - Events: Just push events
@@ -129,7 +129,7 @@ sudo journalctl -u chatbot-webhook -f
 2. **Verify Webhook Service:**
    ```bash
    sudo systemctl status chatbot-webhook
-   curl http://YOUR_EC2_IP:5005/health
+   curl http://18.234.53.50:5005/health
    ```
 
 ### How It Works
@@ -144,7 +144,7 @@ sudo journalctl -u chatbot-webhook -f
 ### Health Monitoring
 ```bash
 # Enhanced health check (tests Redis + Pinecone connectivity)
-curl http://YOUR_EC2_IP/health | python3 -m json.tool
+curl http://18.234.53.50/health | python3 -m json.tool
 
 # Expected response:
 {
@@ -244,7 +244,7 @@ sudo journalctl -u chatbot-webhook --since "1 hour ago"
 ## 📋 Maintenance Schedule
 
 ### Daily
-- Monitor health endpoint: `curl http://YOUR_EC2_IP/health`
+- Monitor health endpoint: `curl http://18.234.53.50/health`
 - Check service status: `./service_manager.sh status`
 
 ### Weekly

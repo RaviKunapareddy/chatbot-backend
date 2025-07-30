@@ -38,10 +38,10 @@ This implementation is designed for production cloud deployment:
 #### 1. Upload Files to EC2
 ```bash
 # Copy your chatbot code to EC2
-scp -i your-key.pem -r . ubuntu@YOUR_EC2_IP:/home/ubuntu/chatbot/
+scp -i ~/.ssh/chatbot-demo-key.pem -r . ubuntu@18.234.53.50:/home/ubuntu/chatbot/
 
 # SSH to your EC2 instance
-ssh -i your-key.pem ubuntu@YOUR_EC2_IP
+ssh -i ~/.ssh/chatbot-demo-key.pem ubuntu@18.234.53.50
 
 # Move files to deployment location
 sudo mv /home/ubuntu/chatbot/* /opt/chatbot/
@@ -69,14 +69,14 @@ sudo systemctl start chatbot chatbot-webhook
 ./service_manager.sh status
 
 # Test your API
-curl http://YOUR_EC2_IP/health
+curl http://18.234.53.50/health
 ```
 
 ### GitHub Webhook Setup
 
 1. Go to your GitHub repository → Settings → Webhooks
 2. Add webhook:
-   - **URL**: `http://YOUR_EC2_IP/webhook`
+   - **URL**: `http://18.234.53.50:5005/webhook`
    - **Content type**: `application/json`  
    - **Secret**: Use the same value as `GITHUB_WEBHOOK_SECRET` in your `.env`
    - **Events**: Just push events
@@ -113,13 +113,15 @@ Edit `/opt/chatbot/.env` with your service credentials:
 - **HuggingFace**: API key for embeddings
 - **GitHub**: Webhook secret for auto-deployment
 
-### Live Demo URLs
+### Live Demo URLs (✅ CURRENTLY ACTIVE)
 
-After setup, your chatbot will be available at:
-- **Main API**: `http://YOUR_EC2_IP`
-- **API Docs**: `http://YOUR_EC2_IP/docs` ← **Show this to recruiters!**
-- **Health Check**: `http://YOUR_EC2_IP/health`
-- **GitHub Webhook**: `http://YOUR_EC2_IP/webhook`
+Your chatbot is available at:
+- **Main API**: `http://18.234.53.50`
+- **API Docs**: `http://18.234.53.50/docs` ← **Show this to recruiters!**
+- **Health Check**: `http://18.234.53.50/health`
+- **GitHub Webhook**: `http://18.234.53.50:5005/webhook`
+
+**🎯 DEPLOYMENT STATUS**: ✅ Live and operational (verified 2025-07-30)
 
 ### Troubleshooting
 
@@ -160,8 +162,8 @@ uvicorn main:app --reload
 ## API Documentation
 
 Once running (local or AWS), visit:
-- **Swagger UI**: http://localhost:8000/docs (local) or http://YOUR_EC2_IP/docs (AWS)
-- **ReDoc**: http://localhost:8000/redoc (local) or http://YOUR_EC2_IP/redoc (AWS)
+- **Swagger UI**: http://localhost:8000/docs (local) or http://18.234.53.50/docs (AWS)
+- **ReDoc**: http://localhost:8000/redoc (local) or http://18.234.53.50/redoc (AWS)
 
 ## Production Features
 
@@ -202,7 +204,7 @@ This project demonstrates:
 ✅ **Cloud Integration**: Real-world cloud services (Redis, Pinecone, S3)  
 ✅ **DevOps Skills**: GitHub webhooks, systemd services, Nginx configuration  
 
-**Live Demo**: [YOUR_EC2_IP/docs] ← Interactive API documentation  
+**Live Demo**: [18.234.53.50/docs](http://18.234.53.50/docs) ← Interactive API documentation  
 **Auto-Deploy**: Push code changes → Automatic deployment to AWS
 
 ## Testing
