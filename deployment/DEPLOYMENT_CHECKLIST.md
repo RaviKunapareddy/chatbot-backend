@@ -5,9 +5,9 @@
 This document serves as the master reference for understanding the complete AI chatbot deployment system. Based on verified production deployment as of 2025-07-30.
 
 **✅ DEPLOYMENT STATUS: LIVE AND OPERATIONAL**
-- **Production URL**: http://18.234.53.50
-- **API Documentation**: http://18.234.53.50/docs
-- **Health Check**: http://18.234.53.50/health
+- **Production URL**: http://YOUR_EC2_IP
+- **API Documentation**: http://YOUR_EC2_IP/docs
+- **Health Check**: http://YOUR_EC2_IP/health
 - **Last Verified**: 2025-07-30 11:25 UTC
 
 ---
@@ -67,7 +67,7 @@ GitHub Push → Webhook (Port 5005) → Git Pull → Dependency Install → Serv
 ./deployment/service_manager.sh start|stop|restart|status
 
 # Manual deployment
-./deployment/manual_deploy.sh ~/.ssh/chatbot-demo-key.pem 18.234.53.50
+./deployment/manual_deploy.sh ~/.ssh/YOUR_SSH_KEY.pem YOUR_EC2_IP
 ```
 
 ---
@@ -138,11 +138,11 @@ GitHub Push → Webhook (Port 5005) → Git Pull → Dependency Install → Serv
 ```
 
 ### Network Endpoints
-- **Main Application**: http://18.234.53.50 (Port 80 → 8000)
-- **API Documentation**: http://18.234.53.50/docs
-- **Health Check**: http://18.234.53.50/health
-- **Webhook Receiver**: http://18.234.53.50:5005/webhook
-- **SSH Access**: ssh -i ~/.ssh/chatbot-demo-key.pem ubuntu@18.234.53.50
+- **Main Application**: http://YOUR_EC2_IP (Port 80 → 8000)
+- **API Documentation**: http://YOUR_EC2_IP/docs
+- **Health Check**: http://YOUR_EC2_IP/health
+- **Webhook Receiver**: http://YOUR_EC2_IP:5005/webhook
+- **SSH Access**: ssh -i ~/.ssh/YOUR_SSH_KEY.pem ubuntu@YOUR_EC2_IP
 
 ### Cloud Service Locations
 - **Pinecone Index**: Cloud-hosted vector database
@@ -163,8 +163,8 @@ GitHub Push → Webhook (Port 5005) → Git Pull → Dependency Install → Serv
 
 ### Post-Deployment Verification
 - [ ] **Service Status**: `sudo systemctl status chatbot` shows Active
-- [ ] **Health Endpoint**: `curl http://18.234.53.50/health` returns JSON
-- [ ] **Webhook Status**: `curl http://18.234.53.50:5005/health` returns healthy
+- [ ] **Health Endpoint**: `curl http://YOUR_EC2_IP/health` returns JSON
+- [ ] **Webhook Status**: `curl http://YOUR_EC2_IP:5005/health` returns healthy
 - [ ] **Auto-Deploy**: Git push triggers automatic deployment
 - [ ] **Cloud Services**: Redis and Pinecone show "connected" status
 - [ ] **Dependencies**: All requirements.txt packages installed (including numpy)
@@ -172,9 +172,9 @@ GitHub Push → Webhook (Port 5005) → Git Pull → Dependency Install → Serv
 ### Critical Success Indicators
 ```bash
 # Quick verification commands
-ssh -i ~/.ssh/chatbot-demo-key.pem ubuntu@18.234.53.50 "sudo systemctl status chatbot"
-curl -s http://18.234.53.50/health | python3 -m json.tool
-curl -s http://18.234.53.50:5005/health
+ssh -i ~/.ssh/YOUR_SSH_KEY.pem ubuntu@YOUR_EC2_IP "sudo systemctl status chatbot"
+curl -s http://YOUR_EC2_IP/health | python3 -m json.tool
+curl -s http://YOUR_EC2_IP:5005/health
 ```
 
 ---
@@ -196,25 +196,25 @@ curl -s http://18.234.53.50:5005/health
 ### Emergency Procedures
 ```bash
 # Full system restart
-ssh -i ~/.ssh/chatbot-demo-key.pem ubuntu@18.234.53.50 "sudo reboot"
+ssh -i ~/.ssh/YOUR_SSH_KEY.pem ubuntu@YOUR_EC2_IP "sudo reboot"
 
 # Manual deployment (if auto-deploy fails)
-./deployment/manual_deploy.sh ~/.ssh/chatbot-demo-key.pem 18.234.53.50
+./deployment/manual_deploy.sh ~/.ssh/YOUR_SSH_KEY.pem YOUR_EC2_IP
 
 # Service recovery
-ssh -i ~/.ssh/chatbot-demo-key.pem ubuntu@18.234.53.50 "sudo systemctl restart chatbot"
+ssh -i ~/.ssh/YOUR_SSH_KEY.pem ubuntu@YOUR_EC2_IP "sudo systemctl restart chatbot"
 ```
 
 ### Monitoring Commands
 ```bash
 # System resources
-ssh -i ~/.ssh/chatbot-demo-key.pem ubuntu@18.234.53.50 "htop"
+ssh -i ~/.ssh/YOUR_SSH_KEY.pem ubuntu@YOUR_EC2_IP "htop"
 
 # Service logs
-ssh -i ~/.ssh/chatbot-demo-key.pem ubuntu@18.234.53.50 "journalctl -u chatbot -f"
+ssh -i ~/.ssh/YOUR_SSH_KEY.pem ubuntu@YOUR_EC2_IP "journalctl -u chatbot -f"
 
 # Webhook logs
-ssh -i ~/.ssh/chatbot-demo-key.pem ubuntu@18.234.53.50 "tail -f /opt/chatbot/deployment/webhook.log"
+ssh -i ~/.ssh/YOUR_SSH_KEY.pem ubuntu@YOUR_EC2_IP "tail -f /opt/chatbot/deployment/webhook.log"
 ```
 
 ---
@@ -224,22 +224,22 @@ ssh -i ~/.ssh/chatbot-demo-key.pem ubuntu@18.234.53.50 "tail -f /opt/chatbot/dep
 - **Troubleshooting Guide**: `deployment/github_ec2_deployment_troubleshooting_guide.md`
 - **Operations Guide**: `DEPLOYMENT_OPERATIONS_GUIDE.md`
 - **Project README**: `README.md`
-- **API Documentation**: http://18.234.53.50/docs (Live Swagger UI)
+- **API Documentation**: http://YOUR_EC2_IP/docs (Live Swagger UI)
 
 ---
 
 ## 🎯 Quick Reference
 
 ### Essential Information
-- **EC2 IP**: 18.234.53.50
-- **SSH Key**: ~/.ssh/chatbot-demo-key.pem
+- **EC2 IP**: YOUR_EC2_IP
+- **SSH Key**: ~/.ssh/YOUR_SSH_KEY.pem
 - **Git Branch**: master
 - **Python Path**: /opt/chatbot/venv/bin/python
 - **Critical Dependency**: numpy==1.24.3 (REQUIRED for service startup)
 
 ### One-Line Health Check
 ```bash
-curl -s http://18.234.53.50/health && echo " ✅ HEALTHY" || echo " ❌ UNHEALTHY"
+curl -s http://YOUR_EC2_IP/health && echo " ✅ HEALTHY" || echo " ❌ UNHEALTHY"
 ```
 
 ---

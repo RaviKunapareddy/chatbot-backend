@@ -5,10 +5,10 @@
 This comprehensive troubleshooting guide documents the complete process for establishing a reliable GitHub → EC2 webhook connection for auto-deployment. Based on extensive real-world testing and deployment verification, this guide includes all actual issues encountered and their proven solutions.
 
 **✅ VERIFIED DEPLOYMENT STATUS (2025-07-30):**
-- **EC2 Instance**: 18.234.53.50 - ✅ Active and running
+- **EC2 Instance**: YOUR_EC2_IP - ✅ Active and running
 - **Chatbot Service**: ✅ Active (running) for 8+ hours
-- **Health Endpoint**: ✅ http://18.234.53.50:8000/health - Healthy
-- **Webhook Service**: ✅ http://18.234.53.50:5005/health - Healthy
+- **Health Endpoint**: ✅ http://YOUR_EC2_IP:8000/health - Healthy
+- **Webhook Service**: ✅ http://YOUR_EC2_IP:5005/health - Healthy
 - **Auto-Deploy**: ✅ Git logs synchronized (commit e49dd40)
 - **Redis Cloud**: ✅ Connected
 - **Pinecone Cloud**: ✅ Connected
@@ -43,20 +43,20 @@ GitHub Repository → Webhook → EC2 Webhook Server → Git Pull → Service Re
 
 ```bash
 # Test SSH connection
-ssh -i ~/.ssh/chatbot-demo-key.pem ubuntu@18.234.53.50
+ssh -i ~/.ssh/YOUR_SSH_KEY.pem ubuntu@YOUR_EC2_IP
 
 # Test basic connectivity
-ping 18.234.53.50
+ping YOUR_EC2_IP
 
 # Verify security group allows port 5005
-curl -v http://18.234.53.50:5005/health
+curl -v http://YOUR_EC2_IP:5005/health
 ```
 
 ### Step 2: Deploy Webhook Server to EC2
 
 ```bash
 # SSH into EC2
-ssh -i ~/.ssh/chatbot-demo-key.pem ubuntu@18.234.53.50
+ssh -i ~/.ssh/YOUR_SSH_KEY.pem ubuntu@YOUR_EC2_IP
 
 # Clone your repository
 sudo mkdir -p /opt/chatbot
@@ -82,7 +82,7 @@ python webhook.py
 1. Go to your GitHub repository
 2. Navigate to **Settings → Webhooks → Add webhook**
 3. Configure exactly as follows:
-   - **Payload URL**: `http://18.234.53.50:5005/webhook`
+   - **Payload URL**: `http://YOUR_EC2_IP:5005/webhook`
    - **Content type**: `application/json`
    - **Secret**: Your `GITHUB_WEBHOOK_SECRET` value
    - **Which events**: Select "Just the push event"
@@ -103,7 +103,7 @@ git push origin main
 ### Method 1: Check Webhook Logs
 ```bash
 # SSH into EC2
-ssh -i ~/.ssh/chatbot-demo-key.pem ubuntu@18.234.53.50
+ssh -i ~/.ssh/YOUR_SSH_KEY.pem ubuntu@YOUR_EC2_IP
 
 # Check webhook server logs
 sudo journalctl -f | grep webhook
@@ -181,7 +181,7 @@ ps eww $(pgrep -f webhook.py) | grep GITHUB_WEBHOOK_SECRET
 **Verification:**
 ```bash
 # Test external access after security group update
-curl -s http://18.234.53.50:5005/health
+curl -s http://YOUR_EC2_IP:5005/health
 # Should return: {"service":"webhook","status":"healthy"}
 ```
 
@@ -335,7 +335,7 @@ When GitHub → EC2 auto-deploy fails, follow this systematic approach:
 ### Step 1: Test Webhook Connectivity
 ```bash
 # External access test
-curl -s http://18.234.53.50:5005/health
+curl -s http://YOUR_EC2_IP:5005/health
 # Expected: {"service":"webhook","status":"healthy"}
 # If timeout: Check security group (Issue 2)
 ```
@@ -343,7 +343,7 @@ curl -s http://18.234.53.50:5005/health
 ### Step 2: Verify Webhook Authentication
 ```bash
 # Check recent webhook logs
-ssh -i ~/.ssh/chatbot-demo-key.pem ubuntu@18.234.53.50
+ssh -i ~/.ssh/YOUR_SSH_KEY.pem ubuntu@YOUR_EC2_IP
 cd /opt/chatbot/deployment
 tail -10 webhook.log
 # Look for: HTTP 200 (success) vs HTTP 403 (Issue 1)
@@ -356,7 +356,7 @@ tail -10 webhook.log
 git log --oneline -3
 
 # EC2:
-ssh -i ~/.ssh/chatbot-demo-key.pem ubuntu@18.234.53.50
+ssh -i ~/.ssh/YOUR_SSH_KEY.pem ubuntu@YOUR_EC2_IP
 cd /opt/chatbot
 git log --oneline -3
 # Should match if sync working (Issues 3,4 if not)
@@ -382,11 +382,11 @@ sudo systemctl status chatbot
 
 When everything works correctly, you should see:
 
-1. **External webhook access**: `curl http://18.234.53.50:5005/health` returns `{"service":"webhook","status":"healthy"}` ✅
+1. **External webhook access**: `curl http://YOUR_EC2_IP:5005/health` returns `{"service":"webhook","status":"healthy"}` ✅
 2. **Authentication success**: Webhook logs show HTTP 200 from GitHub IPs ✅
 3. **Repository sync**: Latest commits appear on EC2 after GitHub push (commit e49dd40 verified) ✅
 4. **Service running**: `systemctl status chatbot` shows Active (running) for 8+ hours ✅
-5. **Application accessible**: `curl http://18.234.53.50:8000/health` returns comprehensive health JSON ✅
+5. **Application accessible**: `curl http://YOUR_EC2_IP:8000/health` returns comprehensive health JSON ✅
 6. **Cloud services connected**: Redis Cloud and Pinecone Cloud both showing "connected" status ✅
 
 ## 🏆 Real-World Deployment Experience
@@ -449,7 +449,7 @@ curl -s http://localhost:5005/health
 ### Manual Webhook Test
 ```bash
 # Test webhook endpoint manually
-curl -X POST http://18.234.53.50:5005/webhook \
+curl -X POST http://YOUR_EC2_IP:5005/webhook \
   -H "Content-Type: application/json" \
   -H "X-GitHub-Event: push" \
   -H "X-Hub-Signature-256: sha256=test" \
@@ -507,35 +507,35 @@ curl -X POST http://18.234.53.50:5005/webhook \
 ```bash
 # Test all components quickly
 echo "=== CHATBOT SERVICE STATUS ==="
-ssh -i ~/.ssh/chatbot-demo-key.pem ubuntu@18.234.53.50 "sudo systemctl status chatbot"
+ssh -i ~/.ssh/YOUR_SSH_KEY.pem ubuntu@YOUR_EC2_IP "sudo systemctl status chatbot"
 
 echo "=== HEALTH ENDPOINT ==="
-ssh -i ~/.ssh/chatbot-demo-key.pem ubuntu@18.234.53.50 "curl -s http://localhost:8000/health | python3 -m json.tool"
+ssh -i ~/.ssh/YOUR_SSH_KEY.pem ubuntu@YOUR_EC2_IP "curl -s http://localhost:8000/health | python3 -m json.tool"
 
 echo "=== WEBHOOK STATUS ==="
-ssh -i ~/.ssh/chatbot-demo-key.pem ubuntu@18.234.53.50 "curl -s http://localhost:5005/health"
+ssh -i ~/.ssh/YOUR_SSH_KEY.pem ubuntu@YOUR_EC2_IP "curl -s http://localhost:5005/health"
 
 echo "=== GIT SYNC STATUS ==="
 echo "Local:"
 git log --oneline -3
 echo "EC2:"
-ssh -i ~/.ssh/chatbot-demo-key.pem ubuntu@18.234.53.50 "cd /opt/chatbot && git log --oneline -3"
+ssh -i ~/.ssh/YOUR_SSH_KEY.pem ubuntu@YOUR_EC2_IP "cd /opt/chatbot && git log --oneline -3"
 ```
 
 ### Emergency Restart Commands
 ```bash
 # Restart chatbot service
-ssh -i ~/.ssh/chatbot-demo-key.pem ubuntu@18.234.53.50 "sudo systemctl restart chatbot"
+ssh -i ~/.ssh/YOUR_SSH_KEY.pem ubuntu@YOUR_EC2_IP "sudo systemctl restart chatbot"
 
 # Restart webhook server
-ssh -i ~/.ssh/chatbot-demo-key.pem ubuntu@18.234.53.50 "pkill -f webhook.py && cd /opt/chatbot/deployment && nohup python3 webhook.py > webhook.log 2>&1 &"
+ssh -i ~/.ssh/YOUR_SSH_KEY.pem ubuntu@YOUR_EC2_IP "pkill -f webhook.py && cd /opt/chatbot/deployment && nohup python3 webhook.py > webhook.log 2>&1 &"
 
 # Full system restart
-ssh -i ~/.ssh/chatbot-demo-key.pem ubuntu@18.234.53.50 "cd /opt/chatbot/deployment && ./service_manager.sh restart"
+ssh -i ~/.ssh/YOUR_SSH_KEY.pem ubuntu@YOUR_EC2_IP "cd /opt/chatbot/deployment && ./service_manager.sh restart"
 ```
 
 ### Current Verified Configuration (2025-07-30)
-- **EC2 Instance**: 18.234.53.50
+- **EC2 Instance**: YOUR_EC2_IP
 - **SSH Key**: ~/.ssh/chatbot-demo-key.pem
 - **Chatbot Port**: 8000 (internal), 80 (external via nginx)
 - **Webhook Port**: 5005
