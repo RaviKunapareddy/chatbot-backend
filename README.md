@@ -69,14 +69,14 @@ sudo systemctl start chatbot chatbot-webhook
 ./service_manager.sh status
 
 # Test your API
-curl http://18.234.53.50/health
+curl https://chatbot-api.ravii.app/health
 ```
 
 ### GitHub Webhook Setup
 
 1. Go to your GitHub repository → Settings → Webhooks
 2. Add webhook:
-   - **URL**: `http://18.234.53.50:5005/webhook`
+   - **URL**: `https://chatbot-api.ravii.app/webhook`
    - **Content type**: `application/json`  
    - **Secret**: Use the same value as `GITHUB_WEBHOOK_SECRET` in your `.env`
    - **Events**: Just push events
@@ -116,10 +116,10 @@ Edit `/opt/chatbot/.env` with your service credentials:
 ### Live Demo URLs (✅ CURRENTLY ACTIVE)
 
 Your chatbot is available at:
-- **Main API**: `http://18.234.53.50`
-- **API Docs**: `http://18.234.53.50/docs` ← **Show this to recruiters!**
-- **Health Check**: `http://18.234.53.50/health`
-- **GitHub Webhook**: `http://18.234.53.50:5005/webhook`
+- **Main API**: `https://chatbot-api.ravii.app`
+- **API Docs**: `https://chatbot-api.ravii.app/docs` ← **Show this to recruiters!**
+- **Health Check**: `https://chatbot-api.ravii.app/health`
+- **GitHub Webhook**: `https://chatbot-api.ravii.app/webhook`
 
 **🎯 DEPLOYMENT STATUS**: ✅ Live and operational (verified 2025-07-30)
 
@@ -162,8 +162,8 @@ uvicorn main:app --reload
 ## API Documentation
 
 Once running (local or AWS), visit:
-- **Swagger UI**: http://localhost:8000/docs (local) or http://18.234.53.50/docs (AWS)
-- **ReDoc**: http://localhost:8000/redoc (local) or http://18.234.53.50/redoc (AWS)
+- **Swagger UI**: http://localhost:8000/docs (local) or https://chatbot-api.ravii.app/docs (AWS)
+- **ReDoc**: http://localhost:8000/redoc (local) or https://chatbot-api.ravii.app/redoc (AWS)
 
 ## Production Features
 
@@ -204,7 +204,7 @@ This project demonstrates:
 ✅ **Cloud Integration**: Real-world cloud services (Redis, Pinecone, S3)  
 ✅ **DevOps Skills**: GitHub webhooks, systemd services, Nginx configuration  
 
-**Live Demo**: [18.234.53.50/docs](http://18.234.53.50/docs) ← Interactive API documentation  
+**Live Demo**: [chatbot-api.ravii.app/docs](https://chatbot-api.ravii.app/docs) ← Interactive API documentation  
 **Auto-Deploy**: Push code changes → Automatic deployment to AWS
 
 ## Testing
