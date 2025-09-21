@@ -4,7 +4,7 @@
 
 This comprehensive troubleshooting guide documents the complete process for establishing a reliable GitHub → EC2 webhook connection for auto-deployment. Based on extensive real-world testing and deployment verification, this guide includes all actual issues encountered and their proven solutions.
 
-**✅ VERIFIED DEPLOYMENT STATUS (2025-07-30):**
+**✅ VERIFIED DEPLOYMENT STATUS (2025-09-20):**
 - **EC2 Instance**: YOUR_EC2_IP - ✅ Active and running
 - **Chatbot Service**: ✅ Active (running) for 8+ hours
 - **Health Endpoint**: ✅ http://YOUR_EC2_IP:8000/health - Healthy
@@ -29,8 +29,9 @@ GitHub Repository → Webhook → EC2 Webhook Server → Git Pull → Service Re
 
 ### GitHub Repository Setup
 - [ ] Repository exists and is accessible
-- [ ] Code is pushed to main branch
+- [ ] Code is pushed to master branch
 - [ ] Repository contains deployment scripts
+- [ ] Git branch is set to master (not main)
 
 ### Local Development Setup
 - [ ] SSH key configured for EC2 access
@@ -95,7 +96,7 @@ python webhook.py
 echo "Test deployment $(date)" >> test.txt
 git add test.txt
 git commit -m "Test auto-deploy trigger"
-git push origin main
+git push origin master
 ```
 
 ## 🔍 Verification Methods
@@ -193,7 +194,7 @@ curl -s http://YOUR_EC2_IP:5005/health
 - Files remain unchanged after GitHub push
 
 **Root Cause:**
-- Webhook deployment script uses `git pull origin main`
+- Webhook deployment script uses `git pull origin master`
 - Repository actually uses `master` as default branch
 - Branch name mismatch prevents successful pull
 
@@ -306,12 +307,12 @@ sudo systemctl restart chatbot
 **Solution (VERIFIED WORKING):**
 ```bash
 # 1. Add numpy to requirements.txt
-echo "numpy==1.24.3" >> /opt/chatbot/requirements.txt
+echo "numpy==1.26.4" >> /opt/chatbot/requirements.txt
 
 # 2. Install the missing dependency
 cd /opt/chatbot
 source venv/bin/activate
-pip install numpy==1.24.3
+pip install numpy==1.26.4
 
 # 3. Restart the service
 sudo systemctl restart chatbot
@@ -321,9 +322,9 @@ sudo systemctl status chatbot
 curl http://localhost:8000/health
 ```
 
-**✅ VERIFIED SOLUTION (2025-07-30):**
+**✅ VERIFIED SOLUTION (2025-09-20):**
 - This fix resolved the final service startup issue
-- Numpy 1.24.3 added to requirements.txt line 16
+- Numpy 1.26.4 added to requirements.txt (updated version)
 - Service now runs successfully for 8+ hours
 - Health endpoint returns proper JSON response
 - **This was the critical missing piece for production deployment**
@@ -345,7 +346,7 @@ curl -s http://YOUR_EC2_IP:5005/health
 # Check recent webhook logs
 ssh -i ~/.ssh/YOUR_SSH_KEY.pem ubuntu@YOUR_EC2_IP
 cd /opt/chatbot/deployment
-tail -10 webhook.log
+tail -10 /opt/chatbot/logs/webhook/webhook.log
 # Look for: HTTP 200 (success) vs HTTP 403 (Issue 1)
 ```
 
@@ -456,6 +457,22 @@ curl -X POST http://YOUR_EC2_IP:5005/webhook \
   -d '{"ref":"refs/heads/main","repository":{"full_name":"USER/REPO"}}'
 ```
 
+---
+
+## 📚 **Related Documentation**
+
+**Quick Navigation:**
+- **📋 Deployment Setup**: `guide.md` - Start here for initial deployment architecture
+- **⚡ Daily Operations**: `operations.md` - Emergency commands and service management  
+- **🎓 System Understanding**: `../development/codebase-guide.md` - Deep dive into how the system works
+
+**When to Use Each Document:**
+- **Before troubleshooting**: Check `operations.md` for basic health checks
+- **For redeployment**: Use `guide.md` for complete setup verification
+- **For code changes**: Reference `../development/codebase-guide.md` to understand impact
+
+---
+
 ## 🎯 Best Practices
 
 ### Security
@@ -536,14 +553,28 @@ ssh -i ~/.ssh/YOUR_SSH_KEY.pem ubuntu@YOUR_EC2_IP "cd /opt/chatbot/deployment &&
 
 ### Current Verified Configuration (2025-07-30)
 - **EC2 Instance**: YOUR_EC2_IP
-- **SSH Key**: ~/.ssh/chatbot-demo-key.pem
+- **SSH Key**: ~/.ssh/your-ssh-key.pem
 - **Chatbot Port**: 8000 (internal), 80 (external via nginx)
 - **Webhook Port**: 5005
 - **Git Branch**: master
 - **Python Environment**: /opt/chatbot/venv
 - **Service Status**: Active (running) 8+ hours
-- **Critical Dependencies**: numpy==1.24.3 (REQUIRED)
+- **Critical Dependencies**: numpy==1.26.4 (REQUIRED)
 
 ---
 
-**📝 MAINTENANCE NOTE**: This guide documents real-world deployment experience as of 2025-07-30. All commands and solutions have been verified in production. Update this guide when new issues are discovered and resolved.
+---
+
+## 📝 **Document Maintenance**
+
+**Last Updated**: 2025-09-20  
+**Document Version**: 1.3  
+**Status**: ✅ Verified troubleshooting solutions  
+
+**Recent Updates:**
+- 2025-09-20: Updated numpy version references (1.24.3 → 1.26.4)
+- 2025-09-20: Standardized git branch references to 'master'
+- 2025-09-20: Fixed webhook log paths and added cross-references
+
+**Maintenance Schedule**: Update when new deployment issues are discovered and resolved.  
+**Next Review**: When major system changes occur or quarterly (2025-12-20)

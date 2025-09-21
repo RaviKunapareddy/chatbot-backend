@@ -1,0 +1,9 @@
+name: chatbot-backend-dev
+channels:
+  - conda-forge              # Reliable package source
+dependencies:
+  - python=3.11              # Python 3.11.x (matches deployment flexibility)
+  - pip                       # Package installer
+  - git                       # Version control for development
+  - pip:
+      - -r requirements.txt   # All packages defined in requirements.txt

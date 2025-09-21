@@ -1,5 +1,9 @@
-# Search module for Pinecone vector search
-from vector_service.pinecone_client import pinecone_products_client
+"""
+Search package
 
-# Export the product data loader
-from .product_data_loader import product_data_loader
+Keep this __init__ lightweight to avoid side effects during import (e.g., in
+unittest discovery). Import specific modules directly where needed, e.g.:
+    from search.product_data_loader import ProductDataLoader
+"""
+
+__all__ = []

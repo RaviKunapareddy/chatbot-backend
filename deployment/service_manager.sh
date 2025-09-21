@@ -55,6 +55,11 @@ rollback() {
     echo ""
     echo "🔄 Rolling back to $commit_hash..."
     
+    # Create backup branch before rollback
+    BACKUP_BRANCH="backup-$(date +%Y%m%d-%H%M%S)"
+    echo "💾 Creating backup branch: $BACKUP_BRANCH"
+    git branch "$BACKUP_BRANCH" 2>/dev/null || true
+    
     # Stop services before rollback
     echo "🛑 Stopping services..."
     sudo systemctl stop chatbot chatbot-webhook 2>/dev/null || true
@@ -71,6 +76,9 @@ rollback() {
         echo "✅ Rollback completed successfully!"
         echo "📋 Current commit:"
         git log --oneline -1
+        echo ""
+        echo "💡 Backup created: '$BACKUP_BRANCH'"
+        echo "   To restore previous state: git checkout $BACKUP_BRANCH"
     else
         echo "❌ Rollback failed"
         exit 1
@@ -106,9 +114,29 @@ case "$1" in
         echo ""
         sudo systemctl status chatbot-webhook --no-pager -l
         echo ""
-        echo "🌐 Health Check:"
-        curl -s http://localhost:8000/health | python3 -m json.tool 2>/dev/null || echo "Main API: Not responding"
+        echo "🌐 Webhook Health Check:"
         curl -s http://localhost:5005/health | python3 -m json.tool 2>/dev/null || echo "Webhook: Not responding"
+        echo ""
+        echo "📊 Indexing Coordination Status:"
+        python3 -c "
+import sys
+sys.path.insert(0, '/opt/chatbot')
+try:
+    from common.indexing_coordinator import indexing_coordinator
+    status = indexing_coordinator.get_status_summary()
+    if status.get('status') == 'coordination_active':
+        print(f'✅ Coordination active')
+        print(f'  Last indexed: {status.get(\"last_indexed\", \"Unknown\")}')
+        print(f'  Indexed by: {status.get(\"indexed_by\", \"Unknown\")}')
+        print(f'  Operation: {status.get(\"operation\", \"Unknown\")}')
+        print(f'  Product count: {status.get(\"product_count\", 0)}')
+    elif status.get('status') == 'no_coordination_info':
+        print('ℹ️ No coordination info (first run or data cleared)')
+    else:
+        print(f'⚠️ Status: {status.get(\"status\", \"unknown\")}')
+except Exception as e:
+    print(f'❌ Coordination check failed: {e}')
+" 2>/dev/null || echo "❌ Could not check coordination status"
         ;;
     
     logs)
@@ -118,11 +146,16 @@ case "$1" in
     
     update)
         echo "🔄 Updating from GitHub..."
+        if [ ! -d "/opt/chatbot" ]; then
+            echo "❌ Error: /opt/chatbot directory not found"
+            echo "   Please run initial_setup.sh first"
+            exit 1
+        fi
         cd /opt/chatbot
-        git pull origin main
+        git pull origin master
         source venv/bin/activate
         pip install -r requirements.txt
-        sudo systemctl restart chatbot
+        sudo systemctl restart chatbot chatbot-webhook
         echo "✅ Update completed"
         ;;
     

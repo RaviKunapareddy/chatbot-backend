@@ -1,0 +1,43 @@
+[tool.black]
+line-length = 100
+# target-version intentionally omitted for maximum compatibility
+
+[tool.isort]
+profile = "black"
+line_length = 100
+src_paths = ["."]
+known_first_party = [
+  "common",
+  "data",
+  "llm",
+  "memory",
+  "router",
+  "search",
+  "support_docs",
+  "vector_service",
+  "test",
+]
+skip = ["frontend"]
+
+[tool.ruff]
+line-length = 100
+extend-exclude = ["frontend"]
+ 
+[tool.ruff.lint]
+# For the initial mechanical pass, only run import-sorting rules.
+select = ["I"]
+ignore = []
+
+[tool.ruff.lint.isort]
+known-first-party = [
+  "common",
+  "data",
+  "llm",
+  "memory",
+  "router",
+  "search",
+  "support_docs",
+  "vector_service",
+  "test",
+]
+combine-as-imports = true

@@ -1,0 +1,209 @@
+{
+  "category_synonyms": {
+    "smartphones": [
+      "phone",
+      "phones",
+      "mobile",
+      "mobiles",
+      "cell",
+      "cellphone",
+      "cellphones",
+      "handset",
+      "iphone",
+      "android phone"
+    ],
+    "laptops": [
+      "laptop",
+      "laptops",
+      "notebook",
+      "notebooks",
+      "ultrabook",
+      "macbook"
+    ],
+    "tablets": [
+      "tablet",
+      "tablets",
+      "ipad",
+      "galaxy tab"
+    ],
+    "sunglasses": [
+      "sunglasses",
+      "sunglass",
+      "sun glasses",
+      "shades"
+    ],
+    "motorcycle": [
+      "motorcycle",
+      "motor bike",
+      "motorbike"
+    ],
+    "home-decoration": [
+      "home decor",
+      "decor",
+      "decoration",
+      "home decoration"
+    ],
+    "beauty": [
+      "makeup",
+      "cosmetics",
+      "beauty"
+    ],
+    "groceries": [
+      "grocery",
+      "food",
+      "beverages",
+      "snacks"
+    ],
+    "fragrances": [
+      "perfume",
+      "fragrance",
+      "eau de parfum",
+      "cologne"
+    ],
+    "mens-watches": [
+      "men's watch",
+      "mens watch",
+      "male watch",
+      "men watch"
+    ],
+    "womens-watches": [
+      "women's watch",
+      "womens watch",
+      "ladies watch",
+      "woman watch"
+    ],
+    "mens-shoes": [
+      "men's shoes",
+      "mens shoes",
+      "men shoes",
+      "men sneakers"
+    ],
+    "womens-shoes": [
+      "women's shoes",
+      "womens shoes",
+      "ladies shoes",
+      "heels",
+      "pumps"
+    ],
+    "mens-shirts": [
+      "men's shirt",
+      "mens shirt",
+      "men shirt"
+    ],
+    "womens-dresses": [
+      "women's dress",
+      "womens dress",
+      "ladies dress",
+      "gown",
+      "frock"
+    ],
+    "womens-bags": [
+      "handbag",
+      "hand bag",
+      "purse",
+      "women's bag",
+      "ladies bag",
+      "tote"
+    ],
+    "womens-jewellery": [
+      "jewelry",
+      "jewellery",
+      "earring",
+      "earrings",
+      "necklace",
+      "bracelet"
+    ],
+    "tops": [
+      "women's top",
+      "womens top",
+      "ladies top",
+      "blouse"
+    ]
+  },
+  "brand_synonyms": {},
+  "intent_keywords": {
+    "cart": ["cart", "add", "remove", "buy", "purchase", "order", "checkout"],
+    "support": ["policy", "return", "shipping", "warranty", "support", "contact", "refund"],
+    "recommendation": ["recommend", "suggest", "trending", "popular", "gift"],
+    "search": ["show", "find", "search", "browse", "get", "want", "need"],
+    "compare": ["compare", "vs", "versus", "which is better", "difference between"]
+  },
+  "generic_nouns": [
+    "phone",
+    "phones",
+    "laptop",
+    "laptops",
+    "tablet",
+    "tablets",
+    "bag",
+    "bags",
+    "dress",
+    "dresses",
+    "shoes",
+    "shirt",
+    "shirts",
+    "top",
+    "tops",
+    "sunglasses",
+    "perfume",
+    "watch",
+    "watches"
+  ],
+  "phrases": {
+    "in_stock": ["in stock", "available now", "instock", "ready to ship"],
+    "out_of_stock": ["sold out", "out of stock", "unavailable"],
+    "follow_up": [
+      "first option",
+      "second option",
+      "third option",
+      "tell me about",
+      "more about"
+    ],
+    "followup_indicators": ["more", "other", "different", "cheaper", "better", "similar"]
+  },
+  "rating_patterns": [
+    "(?:rating|rated)?\\s*(\\d(?:\\.\\d)?)\\s*\\+\\s*(?:stars?|rating)?",
+    "(\\d(?:\\.\\d)?)\\s*\\+\\s*stars?",
+    "(?:at least|min(?:imum)?)\\s*(\\d(?:\\.\\d)?)\\s*stars?",
+    "(\\d(?:\\.\\d)?)\\s*stars?"
+  ],
+  "discount_patterns": [
+    "(\\d{1,3})\\s*%\\s*(?:off|discount)",
+    "(?:save|discount of)\\s*(\\d{1,3})\\s*%"
+  ],
+  "thresholds": {
+    "fuzzy_similarity_brand": 90,
+    "fuzzy_similarity_category": 90,
+    "fuzzy_unambiguous_margin": 3,
+    "min_token_length": 3
+  },
+  "feature_flags": {
+    "fallback_fuzzy_brand": false,
+    "fallback_fuzzy_category": false
+  },
+  "refine_generic_terms": [
+    "cheaper",
+    "under",
+    "over",
+    "below",
+    "above",
+    "minimum",
+    "max",
+    "at",
+    "least",
+    "most",
+    "only",
+    "in",
+    "stock",
+    "higher",
+    "rating",
+    "better",
+    "rated",
+    "less",
+    "expensive",
+    "lower",
+    "price",
+    "up",
+    "to"
+  ]
+}

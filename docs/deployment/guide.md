@@ -2,13 +2,13 @@
 
 ## 📋 Overview
 
-This document serves as the master reference for understanding the complete AI chatbot deployment system. Based on verified production deployment as of 2025-07-30.
+This document serves as the master reference for understanding the complete AI chatbot deployment system. Based on verified production deployment as of 2025-09-20.
 
 **✅ DEPLOYMENT STATUS: LIVE AND OPERATIONAL**
 - **Production URL**: http://YOUR_EC2_IP
 - **API Documentation**: http://YOUR_EC2_IP/docs
 - **Health Check**: http://YOUR_EC2_IP/health
-- **Last Verified**: 2025-07-30 11:25 UTC
+- **Last Verified**: 2025-09-20 13:50 UTC
 
 ---
 
@@ -44,7 +44,7 @@ GitHub Push → Webhook (Port 5005) → Git Pull → Dependency Install → Serv
 #### Phase 1: Infrastructure Setup
 1. **AWS EC2 Instance**: Ubuntu 22.04 LTS (t2.micro - free tier)
 2. **Security Groups**: Ports 22 (SSH), 80 (HTTP), 5005 (Webhook)
-3. **SSH Access**: Key-based authentication with `chatbot-demo-key.pem`
+3. **SSH Access**: Key-based authentication with your private key file
 
 #### Phase 2: Application Deployment
 1. **Code Upload**: Manual initial deployment via SCP
@@ -122,8 +122,12 @@ GitHub Push → Webhook (Port 5005) → Git Pull → Dependency Install → Serv
 │   ├── service_manager.sh           # Daily operations script
 │   ├── webhook.py                   # GitHub webhook server
 │   ├── manual_deploy.sh             # Emergency deployment
-│   └── github_ec2_deployment_troubleshooting_guide.md
+│   └── troubleshooting.md
 ├── router/                          # API route handlers
+├── vector_service/                  # Pinecone vector operations
+│   ├── pinecone_client.py          # Core Pinecone integration
+│   └── manual_reindex_products.py  # Manual Pinecone maintenance
+├── common/                          # Shared utilities and coordination
 ├── services.py                      # Cloud service integrations
 ├── config.py                        # Application configuration
 └── [other application modules]
@@ -191,6 +195,10 @@ curl -s http://YOUR_EC2_IP:5005/health
 
 # View recent logs
 ./deployment/service_manager.sh logs
+
+# Manual Pinecone reindexing (when product data changes)
+python vector_service/manual_reindex_products.py --dry-run
+python vector_service/manual_reindex_products.py --yes
 ```
 
 ### Emergency Procedures
@@ -214,15 +222,20 @@ ssh -i ~/.ssh/YOUR_SSH_KEY.pem ubuntu@YOUR_EC2_IP "htop"
 ssh -i ~/.ssh/YOUR_SSH_KEY.pem ubuntu@YOUR_EC2_IP "journalctl -u chatbot -f"
 
 # Webhook logs
-ssh -i ~/.ssh/YOUR_SSH_KEY.pem ubuntu@YOUR_EC2_IP "tail -f /opt/chatbot/deployment/webhook.log"
+ssh -i ~/.ssh/YOUR_SSH_KEY.pem ubuntu@YOUR_EC2_IP "tail -f /opt/chatbot/logs/webhook/webhook.log"
 ```
 
 ---
 
 ## 📚 Related Documentation
 
-- **Troubleshooting Guide**: `deployment/github_ec2_deployment_troubleshooting_guide.md`
-- **Operations Guide**: `DEPLOYMENT_OPERATIONS_GUIDE.md`
+### **Complete Documentation Ecosystem**
+- **📋 This Document**: `guide.md` - Master deployment blueprint and architecture guide
+- **⚡ Operations**: `operations.md` - Daily commands and emergency procedures ([Quick Commands](operations.md#quick-commands))
+- **🔧 Troubleshooting**: `troubleshooting.md` - Problem diagnosis and verified solutions ([Common Issues](troubleshooting.md#common-issues))
+- **🎓 Learning**: `../development/codebase-guide.md` - Complete codebase understanding and architecture ([Architecture Overview](../development/codebase-guide.md#architecture-overview))
+
+### **External Resources**
 - **Project README**: `README.md`
 - **API Documentation**: http://YOUR_EC2_IP/docs (Live Swagger UI)
 
@@ -235,7 +248,7 @@ ssh -i ~/.ssh/YOUR_SSH_KEY.pem ubuntu@YOUR_EC2_IP "tail -f /opt/chatbot/deployme
 - **SSH Key**: ~/.ssh/YOUR_SSH_KEY.pem
 - **Git Branch**: master
 - **Python Path**: /opt/chatbot/venv/bin/python
-- **Critical Dependency**: numpy==1.24.3 (REQUIRED for service startup)
+- **Critical Dependency**: numpy==1.26.4 (REQUIRED for service startup)
 
 ### One-Line Health Check
 ```bash
@@ -244,4 +257,17 @@ curl -s http://YOUR_EC2_IP/health && echo " ✅ HEALTHY" || echo " ❌ UNHEALTHY
 
 ---
 
-**📝 Document Status**: Complete deployment reference as of 2025-07-30. All information verified in production environment.
+---
+
+## 📝 **Document Maintenance**
+
+**Last Updated**: 2025-09-20  
+**Document Version**: 2.1  
+**Status**: ✅ Complete deployment reference  
+
+**Recent Updates:**
+- 2025-09-20: Numpy upgraded to 1.26.4, added vector service structure, enhanced daily operations
+- 2025-09-20: Added cross-references to documentation ecosystem
+- 2025-09-20: Updated file paths and coordination system improvements
+
+**Next Review Due**: 2025-12-20 (Quarterly maintenance)

@@ -1,12 +1,29 @@
-# Environment variables
+# ============================================
+# ENVIRONMENT VARIABLES & SECRETS
+# ============================================
+# Environment files with real credentials (CRITICAL SECURITY)
 .env
+*.env.local
+*.env.development
+*.env.production
+*.env.staging
+*.env.backup
+
+# Keep example environment file for setup
+!.env.example
 
 # Personal files with actual credentials/IPs (keep local only)
 PERSONAL_OPERATIONS_GUIDE.md
+docs/personal/
 
-# Python cache files
+# ============================================
+# PYTHON DEVELOPMENT FILES
+# ============================================
+# Byte-compiled / optimized / DLL files
 __pycache__/
 *.py[cod]
+*$py.class
+*.so
 *.pyo
 *.pyd
 .Python
@@ -16,36 +33,222 @@ venv/
 env/
 ENV/
 .venv/
+.env-*/
+pyvenv.cfg
 
-# IDE files
+# Python packaging
+build/
+develop-eggs/
+dist/
+downloads/
+eggs/
+.eggs/
+lib/
+lib64/
+parts/
+sdist/
+var/
+wheels/
+pip-wheel-metadata/
+share/python-wheels/
+*.egg-info/
+.installed.cfg
+*.egg
+MANIFEST
+
+# PyInstaller
+*.manifest
+*.spec
+
+# ============================================
+# TESTING & CODE QUALITY
+# ============================================
+# Testing
+.pytest_cache/
+.coverage
+.coverage.*
+htmlcov/
+.tox/
+.nox/
+coverage.xml
+*.cover
+*.py,cover
+.hypothesis/
+
+# Code quality tools
+.ruff_cache/
+.mypy_cache/
+.dmypy.json
+dmypy.json
+
+# ============================================
+# NODE.JS / FRONTEND
+# ============================================
+# Dependencies
+node_modules/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+lerna-debug.log*
+
+# Runtime data
+pids
+*.pid
+*.seed
+*.pid.lock
+
+# Coverage directory used by tools like istanbul
+coverage/
+*.lcov
+
+# ESLint cache
+.eslintcache
+
+# Build outputs
+dist/
+build/
+.next/
+out/
+
+# Package manager files
+.npm
+.yarn-integrity
+yarn.lock
+package-lock.json
+
+# ============================================
+# IDE & EDITOR FILES
+# ============================================
+# Visual Studio Code
 .vscode/
+*.code-workspace
+
+# JetBrains IDEs
 .idea/
+*.iws
+*.iml
+*.ipr
+
+# Vim
 *.swp
 *.swo
 *~
 
-# OS files
+# Emacs
+*~
+\#*\#
+/.emacs.desktop
+/.emacs.desktop.lock
+*.elc
+auto-save-list
+tramp
+
+# Sublime Text
+*.sublime-workspace
+*.sublime-project
+
+# ============================================
+# OPERATING SYSTEM FILES
+# ============================================
+# macOS
 .DS_Store
 .DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
 Thumbs.db
 
-# Logs
+# Windows
+Thumbs.db
+ehthumbs.db
+Desktop.ini
+$RECYCLE.BIN/
+*.cab
+*.msi
+*.msix
+*.msm
+*.msp
+*.lnk
+
+# Linux
+*~
+
+# ============================================
+# LOGS & TEMPORARY FILES
+# ============================================
+# Application logs
 logs/
 *.log
+pip-log.txt
+pip-delete-this-directory.txt
 
 # Temporary files
 *.tmp
 *.temp
+*.swp
+*.swo
+.tmp/
+temp/
 
-# Distribution / packaging
-build/
-dist/
-*.egg-info/
+# ============================================
+# PROJECT-SPECIFIC EXCLUSIONS
+# ============================================
+# Frontend development folder (separate from backend)
+frontend/
 
-# Testing
-.pytest_cache/
-.coverage
-htmlcov/
+# Test folder (development only)
+test/
 
-# Jupyter Notebook
+# Backup folders from reorganization
+docs-old/
+*-old/
+*.backup
+
+# Deployment keys and certificates
+*.pem
+*.key
+*.cert
+*.crt
+*.p12
+*.pfx
+
+# Migration and maintenance files
+MIGRATION_LOG.md.backup
+
+# Cache directories
+.cache/
+.parcel-cache/
+
+# ============================================
+# CLOUD & DEPLOYMENT ARTIFACTS
+# ============================================
+# AWS
+.aws/
+
+# Docker
+.dockerignore
+
+# Terraform
+*.tfstate
+*.tfstate.*
+.terraform/
+.terraform.lock.hcl
+
+# ============================================
+# JUPYTER NOTEBOOK
+# ============================================
 .ipynb_checkpoints
+
+# ============================================
+# DATABASE FILES
+# ============================================
+*.db
+*.sqlite
+*.sqlite3
+
+# ============================================
+# DOCUMENTATION BUILD
+# ============================================
+site/
+.mkdocs/

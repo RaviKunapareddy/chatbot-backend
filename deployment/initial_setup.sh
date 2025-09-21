@@ -63,8 +63,8 @@ GEMINI_MODEL=gemini-1.5-flash
 
 # Pinecone
 PINECONE_API_KEY=your_pinecone_api_key
-PINECONE_ENVIRONMENT=us-east-1
-PINECONE_INDEX=chatbot-support
+PINECONE_PRODUCTS_INDEX=chatbot-products
+PINECONE_SUPPORT_INDEX=chatbot-support-knowledge
 
 # Redis Cloud
 REDIS_HOST=your_redis_host
