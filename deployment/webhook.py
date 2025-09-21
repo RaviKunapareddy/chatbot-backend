@@ -21,6 +21,9 @@ import subprocess
 
 from flask import Flask, jsonify, request
 
+# Create logs directory if it doesn't exist
+os.makedirs("/opt/chatbot/logs/webhook", exist_ok=True)
+
 # Configure logging
 logger = logging.getLogger(__name__)
 logging.basicConfig(
@@ -31,9 +34,6 @@ logging.basicConfig(
         logging.StreamHandler(),
     ],
 )
-
-# Create logs directory if it doesn't exist
-os.makedirs("/opt/chatbot/logs/webhook", exist_ok=True)
 
 app = Flask(__name__)
 
